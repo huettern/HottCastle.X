@@ -1,0 +1,6 @@
+_fDelay_big_us: CODE, 573 0 31
+_main: CODE, 149 0 366
+_fCCPInterrupt: CODE, 4 0 142
+_MAIN_fInit: CODE, 515 0 58
+_fDelay_ms: CODE, 604 0 30
+Total: 627
