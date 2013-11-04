@@ -10,7 +10,7 @@
  ****************************************************************************/
 
 #include "htc.h"	/* Compiler-Grundfunktionen */
-#include "always.h"	/* Datentypenerweiterungen für Delayfunktionen */
+#include "always.h"	/* Datentypenerweiterungen fï¿½r Delayfunktionen */
 #include "delay.h"	/* Headerdatei Delayfunktionen */
 
 
@@ -66,6 +66,8 @@ tByte EdgeKeeper = 0; //keeps the state of the last input edge
 tByte bRXCount = 0;
 tByte bTransmitData = 0;
 tByte bDummy = 0;
+tByte bRxMode = 0;      //first received byte
+tByte bRxModuleID = 0;  //second received byte
 
 void MAIN_fInit(void);
 
@@ -309,21 +311,26 @@ void interrupt fCCPInterrupt (void)
   else if(RCIF)
   //UART receive interrupt
   {
-    bDummy = RCREG; //get data
-    if(bDummy == 0x80)
+    RCIF = 0; //clear interrupt flag
+    if(bRXCount == 0)
+    //if this is the first received byte
     {
       bRXCount++;
+      bRxMode = RCREG;  //get first received byte
     }
-    else if(bDummy == 0x8D && bRXCount)
+    else if(bRXCount == 1)
+    //if this was the second received byte
     {
-      bTransmitData = 1;
+      bRxModuleID = RCREG;  //get second received byte
+      if(bRxMode == 0x80 && bRxModuleID == 0x8D)
+      //if GAM is called in binary mode
+      {
+        CREN = 0; //disable receiver
+        /* TODO: RESPECT 5ms IDLE LINE!!!! */
+        bTransmitData = 1;  //transmit data
+      }
       bRXCount = 0;
     }
-    else
-    {
-      bRXCount = 0;
-    }
-
   }
 }/* End of fCCPInterrupt */
 
